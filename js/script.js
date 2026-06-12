@@ -38,6 +38,7 @@
   const flipCards = document.querySelectorAll('.flip-card');
   const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
   let cursorHeart = null;
+  let audioWasPlayingBeforeVideo = false;
 
   function createMemoryThumb(index) {
     const button = document.createElement('button');
@@ -344,8 +345,16 @@
     if (!popupOverlay) return;
     popupOverlay.classList.remove('visible');
     popupOverlay.setAttribute('aria-hidden', 'true');
-    popupVideo.pause();
+    if (popupVideo) {
+      try { popupVideo.pause(); } catch (e) {}
+    }
     if (popupClose) popupClose.classList.add('hidden');
+
+    // resume background audio only if it was playing before the video
+    if (audioWasPlayingBeforeVideo && audioPlayer) {
+      audioPlayer.play().catch(() => {});
+    }
+    audioWasPlayingBeforeVideo = false;
   }
 
   function handlePopupNext() {
@@ -628,6 +637,14 @@
   if (popupNext) popupNext.addEventListener('click', handlePopupNext);
   if (popupVideo) {
     popupVideo.addEventListener('play', () => {
+      // pause background audio when video starts, but remember its previous state
+      try {
+        if (audioPlayer) {
+          audioWasPlayingBeforeVideo = !audioPlayer.paused;
+          if (!audioPlayer.paused) audioPlayer.pause();
+        }
+      } catch (e) {}
+
       if (screen.orientation && screen.orientation.lock) {
         screen.orientation.lock('landscape').catch(() => {});
       } else if (screen.lockOrientation) {
