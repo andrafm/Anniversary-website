@@ -1,0 +1,19 @@
+# Ignore common OS and editor files
+.DS_Store
+Thumbs.db
+ehthumbs.db
+# Visual Studio Code
+.vscode/
+
+# Python
+__pycache__/
+*.py[cod]
+
+# Node
+node_modules/
+
+# Logs
+*.log
+
+# Keep media tracked by LFS (do not ignore assets/media)
+# If you later want to exclude local large files, add them here.
