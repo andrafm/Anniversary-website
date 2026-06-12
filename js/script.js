@@ -391,6 +391,8 @@
 
     // resume background audio only if it was playing before the video
     if (audioWasPlayingBeforeVideo && audioPlayer) {
+      // make sure background audio is unmuted before attempting resume
+      try { audioPlayer.muted = false; } catch (e) {}
       audioPlayer.play().catch(() => {
         // if browser blocks programmatic resume, show a resume button
         showResumeAudioButton();
@@ -678,12 +680,17 @@
   }
   if (popupNext) popupNext.addEventListener('click', handlePopupNext);
   if (popupVideo) {
-    popupVideo.addEventListener('play', () => {
-      // also ensure background audio is paused when user actually plays the video
+    // When the video starts playing, ensure background audio is paused and muted
+    // Use both 'play' and 'playing' for robustness across browsers
+    const handleVideoStart = () => {
       try {
         if (audioPlayer) {
           audioWasPlayingBeforeVideo = !audioPlayer.paused;
-          if (!audioPlayer.paused) audioPlayer.pause();
+          if (!audioPlayer.paused) {
+            audioPlayer.pause();
+            // mute to avoid overlap in case of timing/race conditions
+            audioPlayer.muted = true;
+          }
         }
       } catch (e) {}
 
@@ -694,7 +701,10 @@
           screen.lockOrientation('landscape');
         } catch (error) {}
       }
-    });
+    };
+
+    popupVideo.addEventListener('play', handleVideoStart);
+    popupVideo.addEventListener('playing', handleVideoStart);
     popupVideo.addEventListener('ended', closePopup);
   }
 
