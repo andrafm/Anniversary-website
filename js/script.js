@@ -365,6 +365,15 @@
     popupNext.textContent = 'Tonton Video';
     popupNext.classList.remove('hidden');
     if (popupClose) popupClose.classList.add('hidden');
+
+    // pause background audio proactively when opening the video popup
+    try {
+      if (audioPlayer) {
+        audioWasPlayingBeforeVideo = !audioPlayer.paused;
+        if (!audioPlayer.paused) audioPlayer.pause();
+      }
+    } catch (e) {}
+
     if (popupOverlay) {
       popupOverlay.classList.add('visible');
       popupOverlay.setAttribute('aria-hidden', 'false');
@@ -382,7 +391,10 @@
 
     // resume background audio only if it was playing before the video
     if (audioWasPlayingBeforeVideo && audioPlayer) {
-      audioPlayer.play().catch(() => {});
+      audioPlayer.play().catch(() => {
+        // if browser blocks programmatic resume, show a resume button
+        showResumeAudioButton();
+      });
     }
     audioWasPlayingBeforeVideo = false;
   }
@@ -667,7 +679,7 @@
   if (popupNext) popupNext.addEventListener('click', handlePopupNext);
   if (popupVideo) {
     popupVideo.addEventListener('play', () => {
-      // pause background audio when video starts, but remember its previous state
+      // also ensure background audio is paused when user actually plays the video
       try {
         if (audioPlayer) {
           audioWasPlayingBeforeVideo = !audioPlayer.paused;
@@ -691,6 +703,33 @@
       closePopup();
     }
   });
+
+  // Collapse gallery to show a mobile-like view (only first 8 thumbnails), add load more button
+  try {
+    const initialVisible = 8;
+    if (memoryGalleryGrid) {
+      const thumbs = Array.from(memoryGalleryGrid.querySelectorAll('.gallery-thumb'));
+      if (thumbs.length > initialVisible) {
+        memoryGalleryGrid.classList.add('collapsed');
+        const loadBtn = document.createElement('button');
+        loadBtn.type = 'button';
+        loadBtn.className = 'gallery-loadmore';
+        loadBtn.textContent = `Tampilkan semua (${thumbs.length})`;
+        loadBtn.addEventListener('click', () => {
+          if (memoryGalleryGrid.classList.contains('collapsed')) {
+            memoryGalleryGrid.classList.remove('collapsed');
+            loadBtn.textContent = 'Sembunyikan';
+          } else {
+            memoryGalleryGrid.classList.add('collapsed');
+            loadBtn.textContent = `Tampilkan semua (${thumbs.length})`;
+            // scroll back to gallery
+            memoryGalleryGrid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+        });
+        memoryGalleryGrid.parentNode.insertBefore(loadBtn, memoryGalleryGrid.nextSibling);
+      }
+    }
+  } catch (e) {}
 });
 
 window.addEventListener('resize', () => {
