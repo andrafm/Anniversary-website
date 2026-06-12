@@ -146,6 +146,16 @@
     });
   }
 
+  // Ensure background audio reliably loops: if 'ended' fires, restart playback.
+  if (audioPlayer) {
+    audioPlayer.addEventListener('ended', () => {
+      try {
+        audioPlayer.currentTime = 0;
+        audioPlayer.play().catch(() => {});
+      } catch (e) {}
+    });
+  }
+
   function scrollProgress() {
     const scrollTop = window.scrollY;
     const docHeight = document.documentElement.scrollHeight - window.innerHeight;
