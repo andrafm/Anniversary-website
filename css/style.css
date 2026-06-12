@@ -1019,6 +1019,22 @@ body.custom-cursor .gallery-thumb {
   left: 10px;
 }
 
+/* Resume audio button shown when browser blocks programmatic resume */
+.resume-audio {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  z-index: 99999;
+  padding: 10px 16px;
+  border-radius: 999px;
+  border: none;
+  background: linear-gradient(135deg, var(--pink), var(--rose));
+  color: var(--bg);
+  font-weight: 700;
+  box-shadow: 0 10px 30px rgba(15,23,42,0.45);
+  cursor: pointer;
+}
+
 @keyframes heartBeat {
   0%, 100% {
     transform: translate(-50%, -50%) rotate(45deg) scale(1);

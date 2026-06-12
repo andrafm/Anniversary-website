@@ -146,6 +146,26 @@
     });
   }
 
+  function showResumeAudioButton() {
+    if (document.getElementById('resume-audio-btn')) return;
+    const btn = document.createElement('button');
+    btn.id = 'resume-audio-btn';
+    btn.className = 'resume-audio';
+    btn.type = 'button';
+    btn.textContent = 'Lanjutkan Musik';
+    btn.addEventListener('click', () => {
+      if (!audioPlayer) return;
+      audioPlayer.play().then(() => {
+        try { btn.remove(); } catch (e) {}
+      }).catch(() => {
+        // still blocked — keep the button for another click
+      });
+    });
+    document.body.appendChild(btn);
+    // auto-remove after 20s if unused
+    setTimeout(() => { const el = document.getElementById('resume-audio-btn'); if (el) el.remove(); }, 20000);
+  }
+
   // Ensure background audio reliably loops: if 'ended' fires, restart playback.
   if (audioPlayer) {
     audioPlayer.addEventListener('ended', () => {
