@@ -245,26 +245,60 @@
     galleryIndex = (index + galleryImages.length) % galleryImages.length;
     const newSrc = galleryImages[galleryIndex];
     if (mainGalleryImage) {
-      // smooth crossfade: adapt to orientation, fade out → swap → fade in
-      mainGalleryImage.style.opacity = '0';
-      setTimeout(() => {
+      // Use an overlay slide element to avoid layout jumps when switching
+      const slide = document.createElement('img');
+      slide.className = 'gallery-slide';
+      slide.loading = 'eager';
+      slide.alt = mainGalleryImage.alt || 'Gallery image';
+      slide.src = newSrc;
+
+      // place on top of viewer
+      const viewer = mainGalleryImage.closest('.gallery-viewer') || document.querySelector('.gallery-viewer');
+      if (viewer) {
+        viewer.appendChild(slide);
+      } else {
+        // fallback: replace existing image
         mainGalleryImage.src = newSrc;
-        mainGalleryImage.onload = () => {
-          try {
-            // detect image orientation for object-fit
-            if (mainGalleryImage.naturalWidth && mainGalleryImage.naturalHeight) {
-              if (mainGalleryImage.naturalWidth >= mainGalleryImage.naturalHeight) {
-                mainGalleryImage.classList.add('landscape');
-                mainGalleryImage.classList.remove('portrait');
-              } else {
-                mainGalleryImage.classList.add('portrait');
-                mainGalleryImage.classList.remove('landscape');
-              }
+        return;
+      }
+
+      // when loaded, detect orientation and fade in the overlay
+      slide.onload = () => {
+        try {
+          if (slide.naturalWidth && slide.naturalHeight) {
+            if (slide.naturalWidth >= slide.naturalHeight) {
+              slide.classList.add('landscape');
+              slide.classList.remove('portrait');
+            } else {
+              slide.classList.add('portrait');
+              slide.classList.remove('landscape');
             }
+          }
+        } catch (e) {}
+
+        // trigger crossfade
+        requestAnimationFrame(() => {
+          slide.style.opacity = '1';
+        });
+
+        // after transition, set main image src and remove overlay
+        const cleanup = () => {
+          try {
+            mainGalleryImage.src = newSrc;
+            mainGalleryImage.classList.toggle('landscape', slide.classList.contains('landscape'));
+            mainGalleryImage.classList.toggle('portrait', slide.classList.contains('portrait'));
           } catch (e) {}
-          mainGalleryImage.style.opacity = '1';
+          slide.removeEventListener('transitionend', cleanup);
+          if (slide.parentNode) slide.parentNode.removeChild(slide);
         };
-      }, 180);
+
+        slide.addEventListener('transitionend', cleanup);
+        // safety timeout: remove after 1s if transitionend doesn't fire
+        setTimeout(cleanup, 1000);
+      };
+
+      // ensure starting opacity 0 so fade works
+      slide.style.opacity = '0';
     }
     galleryThumbs.forEach((thumb, idx) => {
       thumb.classList.toggle('active', idx === galleryIndex);
