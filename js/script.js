@@ -1,4 +1,11 @@
 ﻿document.addEventListener('DOMContentLoaded', function () {
+  // Prevent browser from restoring previous scroll position on navigation/refresh
+  if ('scrollRestoration' in history) {
+    try { history.scrollRestoration = 'manual'; } catch (e) {}
+  }
+  // Ensure we are at the top when the page loads or before unloading
+  window.scrollTo(0, 0);
+  window.addEventListener('beforeunload', function () { window.scrollTo(0, 0); });
   const loadingScreen = document.querySelector('.loading-screen');
   const startButton = document.querySelector('#start-journey');
   const nextSection = document.querySelector('#gratitude');
